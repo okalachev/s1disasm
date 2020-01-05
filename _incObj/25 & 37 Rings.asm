@@ -42,6 +42,7 @@ Ring_PosData:	dc.b $10, 0		; horizontal tight
 ; ===========================================================================
 
 Ring_Main:	; Routine 0
+		bra.w	Ring_Delete	; remove all rings
 		lea	(v_objstate).w,a2
 		moveq	#0,d0
 		move.b	obRespawnNo(a0),d0

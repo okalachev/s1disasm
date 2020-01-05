@@ -16,6 +16,8 @@ Mon_Index:	dc.w Mon_Main-Mon_Index
 ; ===========================================================================
 
 Mon_Main:	; Routine 0
+		cmp.b	#6,obSubtype(a0)	; is ring monitor?
+		beq	DeleteObject		; if yes, delete object
 		addq.b	#2,obRoutine(a0)
 		move.b	#$E,obHeight(a0)
 		move.b	#$E,obWidth(a0)
