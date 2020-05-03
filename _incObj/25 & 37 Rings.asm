@@ -107,9 +107,80 @@ loc_9C0E:
 		bne.w	DeleteObject
 
 Ring_Animate:	; Routine 2
+		tst.b	(v_shield).w	; does Sonic have a shield?
+		beq.s	.animate	; if no, skip rings attracting
+
+.dist_from_sonic:
+		move.w	(v_player+obX).w,d0	; d0 = distance by x
+		sub.w	obX(a0),d0
+		move.w	(v_player+obY).w,d1	; d1 = distance by y
+		sub.w	obY(a0),d1
+
+.check_magnetised:
+		btst	#0,obStatus(a0)	; is magnetised status set?
+		bne.s	.attract	; if yes, branch
+
+.check_near_x:
+		cmp.w	#64,d0		; if distance by x > 64
+		bge.s	.animate	; goto .animate
+		cmp.w	#-64,d0		; if distance by x < -64
+		ble.s	.animate	; goto .animate
+
+.check_near_y:
+		cmp.w	#64,d1
+		bge.s	.animate
+		cmp.w	#-64,d1
+		ble.s	.animate
+
+		bset	#0,obStatus(a0)	; set magnetised status
+
+.attract:
+		move.w #48,d4	; default attracting acceleration
+
+		move.w	obVelX(a0),d3 ; d3 = ring velocty by X
+		eor.w	d0,d3	; d0's first = 0 if sign(d0) == sign(obVelX)
+		btst	#$F,d3
+		beq.s	.x_towards ; if sign(d0) == sign(d0), branch
+
+		move.w #192,d4
+
+.x_towards:
+
+		cmp.w	#0,d0
+		bge.s	.attract_x
+		neg	d4	; if distance from Sonic by X < 0, d4 = -d4
+
+.attract_x:
+		add.w	d4,obVelX(a0)	; ring velocity by X += d4
+
+
+		move.w #48,d4
+		move.w	obVelY(a0),d3 ; d3 = ring velocty by Y
+		eor.w	d1,d3
+		btst	#$F,d3
+		beq.s	.y_towards ; if sign(d1) == sign(d1), branch
+		move.w #192,d4
+
+.y_towards:
+
+		cmp.w	#0,d1
+		bge.s	.attract_y
+		neg	d4	; if distance from Sonic by X < 0, d4 = -d4
+
+.attract_y:
+		add.w	d4,obVelY(a0)	; ring velocity by Y += d4
+
+.animate:
+		jsr	(SpeedToPos).l
 		move.b	(v_ani1_frame).w,obFrame(a0) ; set frame
 		bsr.w	DisplaySprite
+
+		btst	#0,obStatus(a0)	; is magnetised status set?
+		bne.s	.exit	; if yes, exit
+
 		out_of_range.s	Ring_Delete,$32(a0)
+
+.exit:
 		rts	
 ; ===========================================================================
 
